@@ -1,8 +1,8 @@
 /* ════════════════════════════════════════
    설정 (배포 후 변경)
 ════════════════════════════════════════ */
-const API_BASE = 'https://edgevocabbackend-production.up.railway.app';          // ← 백엔드 서버 주소
-const GOOGLE_CLIENT_ID = '669898971300-ojr91etm7jss7i7e8fn3b189bbpfkg1t.apps.googleusercontent.com'; // ← 변경
+const API_BASE = 'https://edgevocabbackend-production.up.railway.app';
+const GOOGLE_CLIENT_ID = '669898971300-ojr91etm7jss7i7e8fn3b189bbpfkg1t.apps.googleusercontent.com';
 
 /* ════════════════════════════════════════
    PWA
@@ -21,7 +21,6 @@ const isInIframe = window.self !== window.top;
 
 /* 설치 배너: iframe(확장) 또는 standalone에서는 숨김 */
 if (!isInIframe && !isStandalone) {
-  /* Android/Desktop: 브라우저 설치 프롬프트 */
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredInstall = e;
@@ -31,10 +30,9 @@ if (!isInIframe && !isStandalone) {
     document.getElementById('installBanner').style.display = 'none';
   });
 
-  /* iOS: 홈 화면 추가 안내 배너 */
   if (isIOS) {
     const banner = document.getElementById('installBanner');
-    banner.innerHTML = '<span>Safari 하단 공유 버튼(⬆)을 누른 후<br>"홈 화면에 추가"를 선택하세요</span>' +
+    banner.innerHTML = '<span>Safari 공유 버튼에서 "홈 화면에 추가"를 선택하세요</span>' +
       '<button onclick="this.parentElement.style.display=\'none\'">닫기</button>';
     banner.style.display = 'flex';
   }
@@ -56,11 +54,9 @@ window.addEventListener('load', () => {
     showLoginOverlay();
   }
 
-  // GSI 라이브러리 로드 후 초기화
   if (typeof google !== 'undefined' && google.accounts) {
     initGSI();
   } else {
-    // GSI 스크립트가 아직 로드되지 않은 경우 대기
     const checkGSI = setInterval(() => {
       if (typeof google !== 'undefined' && google.accounts) {
         clearInterval(checkGSI);
@@ -97,7 +93,6 @@ function showAppWithUser() {
   syncFromServer();
 }
 
-/* handleGoogleSignIn: GSI 콜백 (전역 함수여야 함) */
 async function handleGoogleSignIn(response) {
   try {
     setSyncStatus('로그인 중...');
@@ -161,18 +156,17 @@ async function apiRequest(method, path, body) {
 ════════════════════════════════════════ */
 async function syncFromServer() {
   if (!getToken()) return;
-  setSyncStatus('🔄 동기화 중...');
+  setSyncStatus('동기화 중...');
   try {
     const res = await apiRequest('GET', '/api/vocab');
     if (!res.ok) throw new Error();
     const serverList = await res.json();
-    // 서버 데이터를 localStorage에 덮어씀 (서버가 진실의 원천)
     const vocab = serverList.map(v => ({
       id: v.id, word: v.word, translation: v.translation, date: v.date
     }));
     saveVocab(vocab);
     updateBadge();
-    setSyncStatus('✓ 동기화됨');
+    setSyncStatus('동기화 완료');
     setTimeout(clearSyncStatus, 2000);
   } catch {
     clearSyncStatus();
@@ -200,73 +194,92 @@ function switchTab(tab) {
   document.getElementById('panel-' + tab).classList.add('active');
   if (tab === 'vocab') renderVocab();
   if (tab === 'quiz')  initQuiz();
+  if (tab === 'translate') document.getElementById('wordInput').focus();
 }
 
 /* ════════════════════════════════════════
-   Translation
+   Translation (Chat style)
 ════════════════════════════════════════ */
-let curWord = '', curTrans = '', alreadyAdded = false;
+let chatMsgId = 0;
 
 function handleKey(e) { if (e.key === 'Enter') doTranslate(); }
 
+function addChatBubble(type, html) {
+  const area = document.getElementById('chatArea');
+  const div = document.createElement('div');
+  div.className = `chat-bubble-${type}`;
+  div.innerHTML = html;
+  const id = ++chatMsgId;
+  div.dataset.id = id;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+  return id;
+}
+
+function removeChatBubble(id) {
+  const el = document.querySelector(`[data-id="${id}"]`);
+  if (el) el.remove();
+}
+
 async function doTranslate() {
-  const raw = document.getElementById('wordInput').value.trim();
+  const input = document.getElementById('wordInput');
+  const raw = input.value.trim();
   if (!raw) return;
 
-  curWord = raw;
-  alreadyAdded = false;
+  input.value = '';
 
-  const btn     = document.getElementById('translateBtn');
-  const loading = document.getElementById('loading');
-  const card    = document.getElementById('resultCard');
+  // User bubble
+  addChatBubble('user', escHtml(raw));
 
+  // Loading bubble
+  const loadId = addChatBubble('loading', '<span class="typing-dots">번역 중</span>');
+
+  const btn = document.getElementById('translateBtn');
   btn.disabled = true;
-  loading.classList.add('show');
-  card.classList.remove('show');
 
   try {
-    const url  = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(raw)}&langpair=en|ko`;
-    const res  = await fetch(url);
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(raw)}&langpair=en|ko`;
+    const res = await fetch(url);
     const data = await res.json();
 
+    removeChatBubble(loadId);
+
     if (data.responseStatus === 200) {
-      curTrans = data.responseData.translatedText;
-
-      document.getElementById('resultEn').textContent = raw;
-      document.getElementById('resultKo').textContent = curTrans;
-      document.getElementById('resultMeta').textContent =
-        `신뢰도 ${Math.round((data.responseData.match || 0) * 100)}%  ·  MyMemory 무료 API`;
-
+      const trans = data.responseData.translatedText;
+      const confidence = Math.round((data.responseData.match || 0) * 100);
       const exists = getVocab().some(v => v.word.toLowerCase() === raw.toLowerCase());
-      const addBtn = document.getElementById('addBtn');
-      addBtn.textContent = exists ? '이미 추가됨 ✓' : '단어장에 추가 +';
-      addBtn.className   = 'btn btn-green' + (exists ? ' added' : '');
-      alreadyAdded = exists;
+      const btnClass = exists ? 'bubble-add-btn added' : 'bubble-add-btn';
+      const btnText = exists ? '추가됨' : '단어장에 추가';
 
-      card.classList.add('show');
+      addChatBubble('bot',
+        `<div class="bubble-translation">${escHtml(trans)}</div>` +
+        `<div class="bubble-meta">신뢰도 ${confidence}%</div>` +
+        `<button class="${btnClass}" onclick="addFromChat(this, '${escAttr(raw)}', '${escAttr(trans)}')">${btnText}</button>`
+      );
     } else {
-      showToast('번역 실패. 다시 시도해주세요.');
+      addChatBubble('bot', '<div style="color:#999">번역 실패. 다시 시도해주세요.</div>');
     }
   } catch {
-    showToast('네트워크 오류가 발생했습니다.');
+    removeChatBubble(loadId);
+    addChatBubble('bot', '<div style="color:#999">네트워크 오류가 발생했습니다.</div>');
   } finally {
     btn.disabled = false;
-    loading.classList.remove('show');
+    input.focus();
   }
 }
 
-/* ════════════════════════════════════════
-   Vocabulary CRUD
-════════════════════════════════════════ */
-async function addToVocab() {
-  if (alreadyAdded || !curWord) return;
+async function addFromChat(btnEl, word, translation) {
+  if (btnEl.classList.contains('added')) return;
+
   const vocab = getVocab();
-  if (vocab.some(v => v.word.toLowerCase() === curWord.toLowerCase())) {
+  if (vocab.some(v => v.word.toLowerCase() === word.toLowerCase())) {
+    btnEl.textContent = '추가됨';
+    btnEl.classList.add('added');
     showToast('이미 단어장에 있습니다.');
     return;
   }
 
-  const newItem = { word: curWord, translation: curTrans, date: today() };
+  const newItem = { word, translation, date: today() };
 
   if (getToken()) {
     try {
@@ -283,13 +296,14 @@ async function addToVocab() {
   saveVocab(vocab);
   updateBadge();
 
-  const addBtn = document.getElementById('addBtn');
-  addBtn.textContent = '추가됨 ✓';
-  addBtn.className   = 'btn btn-green added';
-  alreadyAdded = true;
-  showToast(`"${curWord}" 단어장에 추가!`);
+  btnEl.textContent = '추가됨';
+  btnEl.classList.add('added');
+  showToast(`"${word}" 단어장에 추가!`);
 }
 
+/* ════════════════════════════════════════
+   Vocabulary CRUD
+════════════════════════════════════════ */
 async function deleteWord(idx) {
   const vocab = getVocab();
   const item  = vocab[idx];
@@ -430,7 +444,7 @@ function initQuiz() {
   const vocab = getVocab();
   if (!vocab.length) {
     document.getElementById('quizArea').innerHTML =
-      `<div class="quiz-empty">📚 단어장에 단어를 먼저 추가하세요!</div>`;
+      `<div class="quiz-empty">단어장에 단어를 먼저 추가하세요!</div>`;
     return;
   }
   quizList = [...vocab].sort(() => Math.random() - 0.5);
@@ -459,11 +473,11 @@ function renderQuiz() {
         <div class="quiz-progress-fill" style="width:${pct}%"></div>
       </div>
       <div class="quiz-word">${escHtml(q.word)}</div>
-      <div class="quiz-hint">이 단어의 뜻은 무엇일까요?</div>
+      <div class="quiz-hint">이 단어의 뜻은?</div>
       <div class="quiz-answer" id="quizAnswer">${escHtml(q.translation)}</div>
       <div class="quiz-btns">
         <button class="btn btn-blue"  id="revealBtn" onclick="revealAnswer()">정답 보기</button>
-        <button class="btn btn-green" id="nextBtn"   onclick="nextQuiz()" style="display:none">다음 →</button>
+        <button class="btn btn-green" id="nextBtn"   onclick="nextQuiz()" style="display:none">다음</button>
       </div>
     </div>`;
 }
@@ -483,6 +497,7 @@ function getVocab()   { return JSON.parse(localStorage.getItem('vocab_en') || '[
 function saveVocab(v) { localStorage.setItem('vocab_en', JSON.stringify(v)); }
 function today()      { return new Date().toLocaleDateString('ko-KR'); }
 function escHtml(s)   { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s)   { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"'); }
 
 function updateBadge() {
   const n = getVocab().length;

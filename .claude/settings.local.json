@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Dev/vscode_project/vocab-backend//**)",
+      "Bash(mysql:*)",
+      "Read(//c/Program Files/MySQL/**)",
+      "Bash(\"/c/Program Files/MySQL/MySQL Server 8.0/bin/mysql.exe\" -u root -p0888 -e \"CREATE DATABASE IF NOT EXISTS vocabdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; SHOW DATABASES LIKE ''vocabdb'';\")",
+      "Read(//c/Dev/vscode_project/vocab-backend/**)",
+      "WebFetch(domain:doohk.github.io)",
+      "WebFetch(domain:developer.chrome.com)"
+    ],
+    "additionalDirectories": [
+      "C:\\Dev\\vscode_project\\vocab-extension"
+    ]
+  }
+}

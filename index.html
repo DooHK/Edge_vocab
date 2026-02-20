@@ -2,14 +2,16 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>영어 단어장</title>
   <meta name="description" content="영어 단어를 번역하고 저장하는 무료 단어장 앱" />
-  <meta name="theme-color" content="#4A90D9" />
+  <meta name="theme-color" content="#ffffff" />
 
   <!-- PWA -->
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 
   <!-- OG -->
   <meta property="og:title"       content="영어 단어장" />
@@ -27,23 +29,20 @@
   <!-- 로그인 오버레이 -->
   <div id="loginOverlay">
     <div class="login-card">
-      <h2>📖 영어 단어장</h2>
-      <p>로그인하면 PC와 iOS에서<br>단어장이 자동으로 동기화됩니다.</p>
-      <!-- Google Sign-In 버튼 (JS API로 렌더링) -->
+      <h2>영어 단어장</h2>
+      <p>로그인하면 모든 기기에서<br>단어장이 자동으로 동기화됩니다.</p>
       <div id="g_id_signin"></div>
       <div class="login-divider">또는</div>
       <button class="btn-offline" onclick="continueOffline()">
-        오프라인으로 계속하기 (동기화 없음)
+        오프라인으로 계속하기
       </button>
     </div>
   </div>
 
+  <!-- Header -->
   <div class="header">
     <div class="header-top">
-      <div>
-        <h1>📖 영어 단어장</h1>
-        <p>번역 · 저장 · 퀴즈로 단어를 외워보세요</p>
-      </div>
+      <h1>영어 단어장</h1>
       <div class="user-info" id="userInfo" style="display:none">
         <div class="user-name" id="userName"></div>
         <button class="btn-logout" onclick="logout()">로그아웃</button>
@@ -55,51 +54,43 @@
 
   <!-- PWA 설치 배너 -->
   <div id="installBanner">
-    <span>📲 앱으로 설치하면 더 편리해요!</span>
-    <button onclick="installApp()">설치하기</button>
+    <span>앱으로 설치하면 더 편리해요!</span>
+    <button onclick="installApp()">설치</button>
   </div>
 
+  <!-- Tabs -->
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('translate')">🔍 번역</div>
-    <div class="tab"        onclick="switchTab('vocab')">📚 단어장<span id="badge"></span></div>
-    <div class="tab"        onclick="switchTab('quiz')">✏️ 퀴즈</div>
+    <div class="tab active" onclick="switchTab('translate')">번역</div>
+    <div class="tab"        onclick="switchTab('vocab')">단어장<span id="badge"></span></div>
+    <div class="tab"        onclick="switchTab('quiz')">퀴즈</div>
   </div>
 
-  <!-- ══ 번역 탭 ══ -->
+  <!-- ══ 번역 탭 (채팅 스타일) ══ -->
   <div class="panel active" id="panel-translate">
-    <div class="input-row">
+    <div class="chat-area" id="chatArea"></div>
+    <div class="input-bar">
       <input type="text" id="wordInput"
-             placeholder="영어 단어 또는 문장 입력"
+             placeholder="영어 단어 또는 문장 입력..."
              onkeydown="handleKey(event)" />
-      <button class="btn btn-blue" id="translateBtn" onclick="doTranslate()">번역</button>
-    </div>
-
-    <div class="loading" id="loading">
-      <span class="spinner"></span>번역 중...
-    </div>
-
-    <div class="result-card" id="resultCard">
-      <div class="result-en"   id="resultEn"></div>
-      <div class="result-ko"   id="resultKo"></div>
-      <div class="result-meta" id="resultMeta"></div>
-      <button class="btn btn-green" id="addBtn" onclick="addToVocab()">단어장에 추가 +</button>
+      <button id="translateBtn" onclick="doTranslate()">&#8593;</button>
     </div>
   </div>
 
   <!-- ══ 단어장 탭 ══ -->
   <div class="panel" id="panel-vocab">
-    <div class="vocab-header">
-      <span class="vocab-count" id="vocabCount">0개 단어</span>
-      <button class="btn btn-red btn-sm" onclick="clearAll()">전체 삭제</button>
+    <div class="vocab-toolbar">
+      <div class="vocab-toolbar-top">
+        <span class="vocab-count" id="vocabCount">0개 단어</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()">내보내기</button>
+          <button class="btn btn-outline btn-sm" onclick="importCSV()">가져오기</button>
+          <input type="file" id="importFile" accept=".csv" style="display:none" onchange="handleImport(event)" />
+        </div>
+      </div>
+      <input class="search-box" id="searchBox" type="text"
+             placeholder="단어 검색..." oninput="renderVocab()" />
     </div>
-    <div class="export-row">
-      <button class="btn btn-blue btn-sm" onclick="exportCSV()">CSV 내보내기</button>
-      <button class="btn btn-blue btn-sm" onclick="importCSV()">CSV 가져오기</button>
-      <input type="file" id="importFile" accept=".csv" style="display:none" onchange="handleImport(event)" />
-    </div>
-    <input class="search-box" id="searchBox" type="text"
-           placeholder="🔎 단어 검색..." oninput="renderVocab()" />
-    <div id="vocabList"></div>
+    <div class="vocab-list" id="vocabList"></div>
   </div>
 
   <!-- ══ 퀴즈 탭 ══ -->

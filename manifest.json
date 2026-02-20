@@ -5,8 +5,8 @@
   "start_url": "/Edge_vocab/",
   "scope": "/Edge_vocab/",
   "display": "standalone",
-  "background_color": "#f0f4f8",
-  "theme_color": "#4A90D9",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "orientation": "portrait",
   "icons": [
     {
