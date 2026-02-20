@@ -1,5 +1,11 @@
-const CACHE = 'vocab-app-v1';
-const ASSETS = ['/', '/index.html', '/manifest.json'];
+const CACHE = 'vocab-app-v2';
+const ASSETS = [
+  '/Edge_vocab/',
+  '/Edge_vocab/index.html',
+  '/Edge_vocab/style.css',
+  '/Edge_vocab/app.js',
+  '/Edge_vocab/manifest.json'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
