@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════
    설정 (배포 후 변경)
 ════════════════════════════════════════ */
-const API_BASE = 'http://localhost:8080';          // ← 백엔드 서버 주소
+const API_BASE = 'https://edgevocabbackend-production.up.railway.app';          // ← 백엔드 서버 주소
 const GOOGLE_CLIENT_ID = '669898971300-ojr91etm7jss7i7e8fn3b189bbpfkg1t.apps.googleusercontent.com'; // ← 변경
 
 /* ════════════════════════════════════════
