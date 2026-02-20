@@ -65,14 +65,26 @@
     <div class="tab"        onclick="switchTab('quiz')">퀴즈</div>
   </div>
 
-  <!-- ══ 번역 탭 (채팅 스타일) ══ -->
+  <!-- ══ 번역 탭 ══ -->
   <div class="panel active" id="panel-translate">
-    <div class="chat-area" id="chatArea"></div>
-    <div class="input-bar">
-      <input type="text" id="wordInput"
-             placeholder="영어 단어 또는 문장 입력..."
-             onkeydown="handleKey(event)" />
-      <button id="translateBtn" onclick="doTranslate()">&#8593;</button>
+    <div class="translate-content">
+      <div class="input-row">
+        <input type="text" id="wordInput"
+               placeholder="영어 단어 또는 문장 입력"
+               onkeydown="handleKey(event)" />
+        <button class="btn-send" id="translateBtn" onclick="doTranslate()">번역</button>
+      </div>
+
+      <div class="loading" id="loading">
+        <span class="spinner"></span>번역 중...
+      </div>
+
+      <div class="result-card" id="resultCard">
+        <div class="result-en"   id="resultEn"></div>
+        <div class="result-ko"   id="resultKo"></div>
+        <div class="result-meta" id="resultMeta"></div>
+        <button class="btn btn-add" id="addBtn" onclick="addToVocab()">단어장에 추가</button>
+      </div>
     </div>
   </div>
 

@@ -198,88 +198,67 @@ function switchTab(tab) {
 }
 
 /* ════════════════════════════════════════
-   Translation (Chat style)
+   Translation
 ════════════════════════════════════════ */
-let chatMsgId = 0;
+let curWord = '', curTrans = '', alreadyAdded = false;
 
 function handleKey(e) { if (e.key === 'Enter') doTranslate(); }
 
-function addChatBubble(type, html) {
-  const area = document.getElementById('chatArea');
-  const div = document.createElement('div');
-  div.className = `chat-bubble-${type}`;
-  div.innerHTML = html;
-  const id = ++chatMsgId;
-  div.dataset.id = id;
-  area.appendChild(div);
-  area.scrollTop = area.scrollHeight;
-  return id;
-}
-
-function removeChatBubble(id) {
-  const el = document.querySelector(`[data-id="${id}"]`);
-  if (el) el.remove();
-}
-
 async function doTranslate() {
-  const input = document.getElementById('wordInput');
-  const raw = input.value.trim();
+  const raw = document.getElementById('wordInput').value.trim();
   if (!raw) return;
 
-  input.value = '';
+  curWord = raw;
+  alreadyAdded = false;
 
-  // User bubble
-  addChatBubble('user', escHtml(raw));
+  const btn     = document.getElementById('translateBtn');
+  const loading = document.getElementById('loading');
+  const card    = document.getElementById('resultCard');
 
-  // Loading bubble
-  const loadId = addChatBubble('loading', '<span class="typing-dots">번역 중</span>');
-
-  const btn = document.getElementById('translateBtn');
   btn.disabled = true;
+  loading.classList.add('show');
+  card.classList.remove('show');
 
   try {
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(raw)}&langpair=en|ko`;
-    const res = await fetch(url);
+    const url  = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(raw)}&langpair=en|ko`;
+    const res  = await fetch(url);
     const data = await res.json();
 
-    removeChatBubble(loadId);
-
     if (data.responseStatus === 200) {
-      const trans = data.responseData.translatedText;
-      const confidence = Math.round((data.responseData.match || 0) * 100);
-      const exists = getVocab().some(v => v.word.toLowerCase() === raw.toLowerCase());
-      const btnClass = exists ? 'bubble-add-btn added' : 'bubble-add-btn';
-      const btnText = exists ? '추가됨' : '단어장에 추가';
+      curTrans = data.responseData.translatedText;
 
-      addChatBubble('bot',
-        `<div class="bubble-translation">${escHtml(trans)}</div>` +
-        `<div class="bubble-meta">신뢰도 ${confidence}%</div>` +
-        `<button class="${btnClass}" onclick="addFromChat(this, '${escAttr(raw)}', '${escAttr(trans)}')">${btnText}</button>`
-      );
+      document.getElementById('resultEn').textContent = raw;
+      document.getElementById('resultKo').textContent = curTrans;
+      document.getElementById('resultMeta').textContent =
+        `신뢰도 ${Math.round((data.responseData.match || 0) * 100)}%`;
+
+      const exists = getVocab().some(v => v.word.toLowerCase() === raw.toLowerCase());
+      const addBtn = document.getElementById('addBtn');
+      addBtn.textContent = exists ? '이미 추가됨' : '단어장에 추가';
+      addBtn.className   = 'btn btn-add' + (exists ? ' added' : '');
+      alreadyAdded = exists;
+
+      card.classList.add('show');
     } else {
-      addChatBubble('bot', '<div style="color:#999">번역 실패. 다시 시도해주세요.</div>');
+      showToast('번역 실패. 다시 시도해주세요.');
     }
   } catch {
-    removeChatBubble(loadId);
-    addChatBubble('bot', '<div style="color:#999">네트워크 오류가 발생했습니다.</div>');
+    showToast('네트워크 오류가 발생했습니다.');
   } finally {
     btn.disabled = false;
-    input.focus();
+    loading.classList.remove('show');
   }
 }
 
-async function addFromChat(btnEl, word, translation) {
-  if (btnEl.classList.contains('added')) return;
-
+async function addToVocab() {
+  if (alreadyAdded || !curWord) return;
   const vocab = getVocab();
-  if (vocab.some(v => v.word.toLowerCase() === word.toLowerCase())) {
-    btnEl.textContent = '추가됨';
-    btnEl.classList.add('added');
+  if (vocab.some(v => v.word.toLowerCase() === curWord.toLowerCase())) {
     showToast('이미 단어장에 있습니다.');
     return;
   }
 
-  const newItem = { word, translation, date: today() };
+  const newItem = { word: curWord, translation: curTrans, date: today() };
 
   if (getToken()) {
     try {
@@ -296,9 +275,11 @@ async function addFromChat(btnEl, word, translation) {
   saveVocab(vocab);
   updateBadge();
 
-  btnEl.textContent = '추가됨';
-  btnEl.classList.add('added');
-  showToast(`"${word}" 단어장에 추가!`);
+  const addBtn = document.getElementById('addBtn');
+  addBtn.textContent = '추가됨';
+  addBtn.className   = 'btn btn-add added';
+  alreadyAdded = true;
+  showToast(`"${curWord}" 단어장에 추가!`);
 }
 
 /* ════════════════════════════════════════
@@ -497,7 +478,6 @@ function getVocab()   { return JSON.parse(localStorage.getItem('vocab_en') || '[
 function saveVocab(v) { localStorage.setItem('vocab_en', JSON.stringify(v)); }
 function today()      { return new Date().toLocaleDateString('ko-KR'); }
 function escHtml(s)   { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function escAttr(s)   { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"'); }
 
 function updateBadge() {
   const n = getVocab().length;
