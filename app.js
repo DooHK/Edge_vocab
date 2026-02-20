@@ -13,27 +13,31 @@ if ('serviceWorker' in navigator) {
 
 let deferredInstall = null;
 
-/* iOS 감지 */
+/* 환경 감지 */
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches
                    || window.navigator.standalone === true;
+const isInIframe = window.self !== window.top;
 
-/* Android/Desktop: 브라우저 설치 프롬프트 */
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredInstall = e;
-  document.getElementById('installBanner').style.display = 'flex';
-});
-window.addEventListener('appinstalled', () => {
-  document.getElementById('installBanner').style.display = 'none';
-});
+/* 설치 배너: iframe(확장) 또는 standalone에서는 숨김 */
+if (!isInIframe && !isStandalone) {
+  /* Android/Desktop: 브라우저 설치 프롬프트 */
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredInstall = e;
+    document.getElementById('installBanner').style.display = 'flex';
+  });
+  window.addEventListener('appinstalled', () => {
+    document.getElementById('installBanner').style.display = 'none';
+  });
 
-/* iOS: 홈 화면 추가 안내 배너 */
-if (isIOS && !isStandalone) {
-  const banner = document.getElementById('installBanner');
-  banner.innerHTML = '<span>Safari 하단 공유 버튼(⬆)을 누른 후<br>"홈 화면에 추가"를 선택하세요</span>' +
-    '<button onclick="this.parentElement.style.display=\'none\'">닫기</button>';
-  banner.style.display = 'flex';
+  /* iOS: 홈 화면 추가 안내 배너 */
+  if (isIOS) {
+    const banner = document.getElementById('installBanner');
+    banner.innerHTML = '<span>Safari 하단 공유 버튼(⬆)을 누른 후<br>"홈 화면에 추가"를 선택하세요</span>' +
+      '<button onclick="this.parentElement.style.display=\'none\'">닫기</button>';
+    banner.style.display = 'flex';
+  }
 }
 
 function installApp() {
