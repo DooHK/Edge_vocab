@@ -308,13 +308,19 @@ body {
   background: var(--green);
 }
 
+/* ── Translate bottom (fixed at panel bottom) ── */
+.translate-bottom {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
 /* ── Plan status ── */
 .plan-status {
   text-align: center;
   font-size: 12px;
   color: var(--sub);
-  margin-top: auto;
-  padding-top: 12px;
+  margin-bottom: 8px;
 }
 .plan-status strong {
   color: var(--text);
@@ -325,7 +331,6 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: auto;
   padding: 12px 14px;
   background: var(--primary-light);
   border-radius: 10px;
