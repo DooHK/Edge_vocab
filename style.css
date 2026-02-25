@@ -307,6 +307,58 @@ body {
 .toggle-input:checked + .toggle-slider {
   background: var(--green);
 }
+
+/* ── Plan status ── */
+.plan-status {
+  text-align: center;
+  font-size: 12px;
+  color: var(--sub);
+  margin-top: auto;
+  padding-top: 12px;
+}
+.plan-status strong {
+  color: var(--text);
+}
+
+/* ── Upgrade banner ── */
+.upgrade-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding: 12px 14px;
+  background: var(--primary-light);
+  border-radius: 10px;
+  border: 1px solid var(--primary);
+}
+.upgrade-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.upgrade-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.upgrade-desc {
+  font-size: 11px;
+  color: var(--sub);
+}
+.btn-upgrade {
+  padding: 6px 14px;
+  background: var(--primary);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-upgrade:active {
+  opacity: 0.8;
+}
 .toggle-input:checked + .toggle-slider::after {
   transform: translateX(18px);
 }

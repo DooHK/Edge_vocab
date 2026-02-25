@@ -173,6 +173,18 @@ async function loadUserSettings() {
       if (toggle) toggle.checked = data.autoAdd;
     }
   } catch {}
+
+  // 플랜 상태 → 업그레이드 배너 + 플랜 표시
+  try {
+    const statusRes = await apiRequest('GET', '/api/payment/status');
+    if (statusRes.ok) {
+      const status = await statusRes.json();
+      const banner = document.getElementById('upgradeBanner');
+      const planLabel = document.getElementById('currentPlan');
+      if (banner) banner.style.display = status.isPremium ? 'none' : 'flex';
+      if (planLabel) planLabel.textContent = status.isPremium ? '프리미엄' : '무료';
+    }
+  } catch {}
 }
 
 /* ════════════════════════════════════════

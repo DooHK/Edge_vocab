@@ -94,6 +94,18 @@
         <div class="result-meta" id="resultMeta"></div>
         <button class="btn btn-add" id="addBtn" onclick="addToVocab()">단어장에 추가</button>
       </div>
+
+      <div class="plan-status" id="planStatus">
+        현재 플랜: <strong id="currentPlan">무료</strong>
+      </div>
+
+      <div class="upgrade-banner" id="upgradeBanner">
+        <div class="upgrade-info">
+          <span class="upgrade-title">프리미엄</span>
+          <span class="upgrade-desc">무제한 번역 · 월 ₩2,900</span>
+        </div>
+        <button class="btn-upgrade" onclick="showUpgradePrompt()">업그레이드</button>
+      </div>
     </div>
   </div>
 
