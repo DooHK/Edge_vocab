@@ -21,6 +21,9 @@
   <!-- Google Identity Services -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
+  <!-- 토스페이먼츠 SDK -->
+  <script src="https://js.tosspayments.com/v1/payment" async defer></script>
+
   <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -75,6 +78,12 @@
         <button class="btn-send" id="translateBtn" onclick="doTranslate()">번역</button>
       </div>
 
+      <label class="auto-add-row">
+        <span class="auto-add-label">번역 후 자동 추가</span>
+        <input type="checkbox" id="autoAddToggle" class="toggle-input" />
+        <span class="toggle-slider"></span>
+      </label>
+
       <div class="loading" id="loading">
         <span class="spinner"></span>번역 중...
       </div>
@@ -98,6 +107,9 @@
           <button class="btn btn-outline btn-sm" onclick="importCSV()">가져오기</button>
           <input type="file" id="importFile" accept=".csv" style="display:none" onchange="handleImport(event)" />
         </div>
+      </div>
+      <div class="folder-chips-scroll">
+        <div class="folder-chips" id="folderChips"></div>
       </div>
       <input class="search-box" id="searchBox" type="text"
              placeholder="단어 검색..." oninput="renderVocab()" />
