@@ -112,7 +112,10 @@ async function handleGoogleSignIn(response) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ credential: response.credential })
     });
-    if (!res.ok) throw new Error('서버 인증 실패');
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || '서버 인증 실패');
+    }
     const data = await res.json();
     localStorage.setItem('vocab_token', data.token);
     localStorage.setItem('vocab_user_name', data.name);
