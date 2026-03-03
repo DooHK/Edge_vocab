@@ -100,8 +100,11 @@
       <div class="plan-status" id="planStatus">
         현재 플랜: <strong id="currentPlan">무료</strong>
       </div>
+      <div class="model-status">
+        사용 모델: <span id="currentModel">Google Translate</span>
+      </div>
       <div class="upgrade-link" id="upgradeBanner">
-        <a href="javascript:void(0)" onclick="showUpgradePrompt()">프리미엄으로 업그레이드 →</a>
+        <a href="javascript:void(0)" onclick="showPremiumBenefits()">프리미엄으로 업그레이드 →</a>
       </div>
     </div>
   </div>
@@ -129,6 +132,30 @@
   <!-- ══ 퀴즈 탭 ══ -->
   <div class="panel" id="panel-quiz">
     <div id="quizArea"></div>
+  </div>
+
+  <!-- 프리미엄 혜택 모달 -->
+  <div class="modal-overlay" id="premiumModal" style="display:none" onclick="closePremiumModal(event)">
+    <div class="modal-card">
+      <h2>프리미엄 혜택</h2>
+      <ul class="benefit-list">
+        <li>무제한 번역 (무료: 월 500회)</li>
+        <li>Google Translate 무제한 사용</li>
+        <li>향후 추가될 프리미엄 기능 우선 제공</li>
+      </ul>
+      <div class="pricing-info">
+        <div class="price-option">
+          <strong>월간</strong>
+          <span>₩2,900/월</span>
+        </div>
+        <div class="price-option">
+          <strong>연간</strong>
+          <span>₩19,900/년 <em>(43% 할인)</em></span>
+        </div>
+      </div>
+      <button class="btn btn-upgrade" onclick="showUpgradePrompt()">업그레이드 하기</button>
+      <button class="btn btn-modal-close" onclick="closePremiumModal()">닫기</button>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>

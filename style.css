@@ -326,6 +326,17 @@ body {
   color: var(--text);
 }
 
+/* ── Model status ── */
+.model-status {
+  text-align: center;
+  font-size: 11px;
+  color: var(--sub);
+  margin-bottom: 8px;
+}
+.model-status span {
+  color: var(--text);
+}
+
 /* ── Upgrade link ── */
 .upgrade-link {
   text-align: center;
@@ -337,6 +348,95 @@ body {
 }
 .upgrade-link a:active {
   color: var(--text);
+}
+
+/* ── Premium Benefits Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+.modal-card {
+  background: var(--bg);
+  border-radius: 16px;
+  padding: 28px 24px;
+  width: 90%;
+  max-width: 360px;
+  text-align: center;
+}
+.modal-card h2 {
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+.benefit-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  text-align: left;
+}
+.benefit-list li {
+  font-size: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.benefit-list li::before {
+  content: "✓ ";
+  color: var(--green);
+  font-weight: bold;
+}
+.pricing-info {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.price-option {
+  flex: 1;
+  background: var(--card);
+  border-radius: 10px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.price-option strong {
+  font-size: 13px;
+}
+.price-option span {
+  font-size: 15px;
+  font-weight: 700;
+}
+.price-option em {
+  font-size: 11px;
+  color: var(--green);
+  font-style: normal;
+}
+.btn-upgrade {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  color: var(--text);
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+.btn-upgrade:active {
+  opacity: 0.8;
+}
+.btn-modal-close {
+  width: 100%;
+  padding: 10px;
+  background: none;
+  color: var(--sub);
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
 }
 .toggle-input:checked + .toggle-slider::after {
   transform: translateX(18px);

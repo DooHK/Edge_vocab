@@ -177,15 +177,17 @@ async function loadUserSettings() {
     }
   } catch {}
 
-  // 플랜 상태 → 업그레이드 배너 + 플랜 표시
+  // 플랜 상태 → 업그레이드 배너 + 플랜 + 모델 표시
   try {
     const statusRes = await apiRequest('GET', '/api/payment/status');
     if (statusRes.ok) {
       const status = await statusRes.json();
       const banner = document.getElementById('upgradeBanner');
       const planLabel = document.getElementById('currentPlan');
+      const modelLabel = document.getElementById('currentModel');
       if (banner) banner.style.display = status.isPremium ? 'none' : 'flex';
       if (planLabel) planLabel.textContent = status.isPremium ? '프리미엄' : '무료';
+      if (modelLabel) modelLabel.textContent = status.model || 'Google Translate';
     }
   } catch {}
 }
@@ -894,7 +896,18 @@ function getLocalWrongWords() {
 ════════════════════════════════════════ */
 const TOSS_CLIENT_KEY = 'test_ck_pP2YxJ4K87zeRmWPJdGLrRGZwXLO'; // 실제 키로 교체 필요
 
+function showPremiumBenefits() {
+  document.getElementById('premiumModal').style.display = 'flex';
+}
+
+function closePremiumModal(e) {
+  if (!e || e.target === e.currentTarget) {
+    document.getElementById('premiumModal').style.display = 'none';
+  }
+}
+
 async function showUpgradePrompt() {
+  closePremiumModal();
   if (!getToken()) {
     showToast('로그인이 필요합니다.');
     return;
