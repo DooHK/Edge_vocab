@@ -10,10 +10,27 @@
       "WebFetch(domain:developer.chrome.com)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "WebFetch(domain:arxiv.org)",
+      "Read(//c/Users/dhkim/Desktop/**)",
+      "Read(//c/Dev/vscode_project/itto-backend/src/main/java/com/itto/backend/domain/payment/entity/**)",
+      "Read(//c/Dev/vscode_project/itto-backend/src/main/java/com/itto/backend/global/security/**)",
+      "Read(//c/Dev/vscode_project/itto-backend/src/main/java/com/itto/backend/domain/auth/controller/**)",
+      "Read(//c/Dev/vscode_project/itto-backend/src/main/**)",
+      "Read(//c/Dev/vscode_project/itto-backend/src/**)",
+      "Read(//c/Dev/vscode_project/**)",
+      "Bash(xargs:*)",
+      "Bash(./gradlew compileJava:*)"
     ],
     "additionalDirectories": [
-      "C:\\Dev\\vscode_project\\vocab-extension"
+      "C:\\Dev\\vscode_project\\vocab-extension",
+      "C:\\Dev\\vscode_project\\vocab-backend\\src\\main\\java\\com\\vocab\\entity",
+      "C:\\Dev\\vscode_project\\vocab-backend\\src\\main\\java\\com\\vocab\\repository",
+      "C:\\Dev\\vscode_project\\vocab-backend\\src\\main\\java\\com\\vocab\\dto",
+      "C:\\Dev\\vscode_project\\vocab-backend\\src\\main\\java\\com\\vocab\\service",
+      "C:\\Dev\\vscode_project\\vocab-backend\\src\\main\\java\\com\\vocab\\controller",
+      "C:\\Dev\\vscode_project\\vocab-backend\\src\\main\\java\\com\\vocab\\config",
+      "C:\\Dev\\vscode_project\\vocab-backend"
     ]
   }
 }
