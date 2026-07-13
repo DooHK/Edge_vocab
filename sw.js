@@ -1,4 +1,4 @@
-const CACHE = 'vocab-app-v9';
+const CACHE = 'vocab-app-v12';
 const ASSETS = [
   '/Edge_vocab/',
   '/Edge_vocab/index.html',
