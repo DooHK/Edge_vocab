@@ -307,6 +307,7 @@ async function doTranslate() {
   document.getElementById('searchHome').style.display = 'none';
   document.getElementById('addBtn').style.display = 'flex';
   document.getElementById('detailDeleteBtn').style.display = 'none';
+  document.getElementById('moveWrap').style.display = 'none';
   renderNav();
   loading.classList.add('show');
   card.classList.remove('show');
@@ -807,6 +808,12 @@ function renderLibrary() {
   document.getElementById('libSub').textContent =
     `${filtered.length}개 단어${query ? ` · "${query}" 검색 중` : ''}`;
 
+  const folderDelBtn = document.getElementById('folderDeleteBtn');
+  if (folderDelBtn) {
+    folderDelBtn.style.display =
+      (typeof selectedFolderId === 'number' && selectedFolderId > 0) ? 'inline-block' : 'none';
+  }
+
   if (!filtered.length) {
     list.innerHTML = `<div class="empty-msg">
       <span class="empty-icon">${query ? '🔍' : '📭'}</span>
@@ -840,6 +847,35 @@ function renderLibrary() {
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         <span>검색해서 단어 추가</span>
       </button>`;
+}
+
+/* ── 폴더 관리 ── */
+function deleteCurrentFolder() {
+  if (typeof selectedFolderId === 'number' && selectedFolderId > 0) {
+    deleteFolder(selectedFolderId);
+  }
+}
+
+function populateMoveSelect(v) {
+  const wrap = document.getElementById('moveWrap');
+  if (!getToken() || !v.id) { wrap.style.display = 'none'; return; }
+  const sel = document.getElementById('moveSelect');
+  let html = `<option value="0"${!v.folderId ? ' selected' : ''}>미분류</option>`;
+  folders.forEach(f => {
+    html += `<option value="${f.id}"${v.folderId === f.id ? ' selected' : ''}>${escHtml(f.name)}</option>`;
+  });
+  sel.innerHTML = html;
+  wrap.style.display = 'flex';
+}
+
+async function moveDetailWord(val) {
+  if (detailIdx === null) return;
+  const v = getVocab()[detailIdx];
+  if (!v || !v.id) return;
+  const folderId = parseInt(val) || null;
+  await moveWordToFolder(v.id, folderId);
+  const idx = getVocab().findIndex(x => x.id === v.id);
+  if (idx >= 0) showWordDetail(idx);
 }
 
 /* ── 저장된 단어 상세 (1c entry 재사용) ── */
@@ -876,6 +912,7 @@ function showWordDetail(idx) {
   });
   document.getElementById('addBtn').style.display = 'none';
   document.getElementById('detailDeleteBtn').style.display = 'flex';
+  populateMoveSelect(v);
   document.getElementById('resultCard').classList.add('show');
   renderNav();
 }

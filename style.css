@@ -699,6 +699,26 @@ input { font-family: inherit; }
   color: var(--ink-2);
 }
 .btn-outline:hover { background: var(--fill); opacity: 1; }
+.btn-danger { color: var(--red); border-color: #f2cdcd; }
+.btn-danger:hover { background: var(--red-soft); }
+
+/* 단어 폴더 이동 셀렉트 */
+.move-select { display: flex; align-items: center; }
+.move-select select {
+  height: 48px;
+  padding: 0 12px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  max-width: 160px;
+}
+.move-select select:focus { border-color: var(--faint); }
 
 /* ── Quiz ── */
 .quiz-card {

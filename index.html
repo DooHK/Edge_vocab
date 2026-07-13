@@ -133,6 +133,9 @@
               <div class="entry__sub" id="resultMeta"></div>
             </div>
             <div class="entry__actions">
+              <label class="move-select" id="moveWrap" style="display:none">
+                <select id="moveSelect" onchange="moveDetailWord(this.value)" aria-label="폴더 이동"></select>
+              </label>
               <button class="save-btn" id="addBtn" onclick="addToVocab()">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 단어장에 저장
@@ -190,6 +193,8 @@
           <div class="lib-actions">
             <button class="btn btn-outline btn-sm" onclick="exportCSV()">내보내기</button>
             <button class="btn btn-outline btn-sm" onclick="importCSV()">가져오기</button>
+            <button class="btn btn-outline btn-sm btn-danger" id="folderDeleteBtn" style="display:none" onclick="deleteCurrentFolder()">폴더 삭제</button>
+            <button class="btn btn-outline btn-sm btn-danger" onclick="clearAll()">전체 삭제</button>
             <input type="file" id="importFile" accept=".csv" style="display:none" onchange="handleImport(event)" />
           </div>
           <div class="tabs" id="libTabs"></div>
