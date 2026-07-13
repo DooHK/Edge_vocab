@@ -25,6 +25,7 @@
   <script src="https://js.tosspayments.com/v1/payment" async defer></script>
 
   <!-- Styles -->
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -42,17 +43,6 @@
     </div>
   </div>
 
-  <!-- Header -->
-  <div class="header">
-    <div class="header-top">
-      <h1>영어 단어장</h1>
-      <div class="user-info" id="userInfo" style="display:none">
-        <div class="user-name" id="userName"></div>
-        <button class="btn-logout" onclick="logout()">로그아웃</button>
-      </div>
-    </div>
-  </div>
-
   <div id="syncStatus"></div>
 
   <!-- PWA 설치 배너 -->
@@ -61,77 +51,145 @@
     <button onclick="installApp()">설치</button>
   </div>
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('translate')">번역</div>
-    <div class="tab"        onclick="switchTab('vocab')">단어장<span id="badge"></span></div>
-    <div class="tab"        onclick="switchTab('quiz')">퀴즈</div>
-  </div>
-
-  <!-- ══ 번역 탭 ══ -->
-  <div class="panel active" id="panel-translate">
-    <div class="translate-content">
-      <div class="input-row">
-        <input type="text" id="wordInput"
-               placeholder="영어 단어 또는 문장 입력"
-               onkeydown="handleKey(event)" />
-        <button class="btn-send" id="translateBtn" onclick="doTranslate()">번역</button>
+  <!-- ══ 홈 뷰 (1c: 좌측 폴더 내비 + 검색 집중형 상세) ══ -->
+  <div class="layout" id="homeView">
+    <nav class="nav">
+      <div class="nav__brand">
+        <span class="brand-mark">W</span>
+        <span class="nav__name">영어 단어장</span>
       </div>
 
-      <label class="auto-add-row">
-        <span class="auto-add-label">번역 후 자동 추가</span>
-        <input type="checkbox" id="autoAddToggle" class="toggle-input" />
-        <span class="toggle-slider"></span>
-      </label>
-
-      <div class="loading" id="loading">
-        <span class="spinner"></span>번역 중...
+      <div class="nav__group">
+        <div class="nav__label">단어장 폴더</div>
+        <div id="navFolders"></div>
+        <button class="folder folder--add" onclick="showCreateFolder()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span class="folder__name">폴더 추가</span>
+        </button>
       </div>
 
-      <div class="result-card" id="resultCard">
-        <div class="result-en"   id="resultEn"></div>
-        <div class="result-ko"   id="resultKo"></div>
-        <div class="result-meta" id="resultMeta"></div>
-        <button class="btn btn-add" id="addBtn" onclick="addToVocab()">단어장에 추가</button>
+      <div class="nav__group">
+        <div class="nav__label">학습</div>
+        <button class="folder" id="quizNavBtn" onclick="showQuiz()">
+          <span class="folder__dot" style="background:#6d5bd6"></span>
+          <span class="folder__name">퀴즈</span>
+        </button>
       </div>
 
-    </div>
-    <div class="translate-bottom">
-      <div class="plan-status" id="planStatus">
-        현재 플랜: <strong id="currentPlan">무료</strong>
+      <div class="nav__stat">
+        <span>오늘 저장한 단어</span>
+        <strong><span id="todayCount">0</span><small> 개</small></strong>
       </div>
-      <div class="model-status">
-        사용 모델: <span id="currentModel">Google Translate</span>
-      </div>
-      <div class="upgrade-link" id="upgradeBanner">
-        <a href="javascript:void(0)" onclick="showPremiumBenefits()">프리미엄으로 업그레이드 →</a>
-      </div>
-    </div>
-  </div>
 
-  <!-- ══ 단어장 탭 ══ -->
-  <div class="panel" id="panel-vocab">
-    <div class="vocab-toolbar">
-      <div class="vocab-toolbar-top">
-        <span class="vocab-count" id="vocabCount">0개 단어</span>
-        <div style="display:flex;gap:6px">
-          <button class="btn btn-outline btn-sm" onclick="exportCSV()">내보내기</button>
-          <button class="btn btn-outline btn-sm" onclick="importCSV()">가져오기</button>
-          <input type="file" id="importFile" accept=".csv" style="display:none" onchange="handleImport(event)" />
+      <div class="nav__bottom">
+        <div class="plan-status" id="planStatus">현재 플랜: <strong id="currentPlan">무료</strong></div>
+        <div class="model-status">사용 모델: <span id="currentModel">Google Translate</span></div>
+        <div class="upgrade-link" id="upgradeBanner">
+          <a href="javascript:void(0)" onclick="showPremiumBenefits()">프리미엄으로 업그레이드 →</a>
+        </div>
+        <div class="user-info" id="userInfo" style="display:none">
+          <span class="user-name" id="userName"></span>
+          <button class="btn-logout" onclick="logout()">로그아웃</button>
         </div>
       </div>
-      <div class="folder-chips-scroll">
-        <div class="folder-chips" id="folderChips"></div>
+    </nav>
+
+    <main class="main">
+      <div class="main__searchbar">
+        <label class="searchfield">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#71717a" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+          <input type="text" id="wordInput"
+                 placeholder="영어 단어를 검색하세요"
+                 onkeydown="handleKey(event)" autocomplete="off" />
+          <kbd>Enter ↵</kbd>
+        </label>
+        <label class="auto-add-row">
+          <span class="auto-add-label">자동 저장</span>
+          <input type="checkbox" id="autoAddToggle" class="toggle-input" />
+          <span class="toggle-slider"></span>
+        </label>
       </div>
-      <input class="search-box" id="searchBox" type="text"
-             placeholder="단어 검색..." oninput="renderVocab()" />
-    </div>
-    <div class="vocab-list" id="vocabList"></div>
+
+      <div class="main__content">
+        <div class="search-empty" id="searchHome">
+          <span class="empty-icon">🔍</span>
+          궁금한 영어 단어를 검색해 보세요.<br>번역 후 단어장에 저장할 수 있습니다.
+        </div>
+
+        <div class="loading" id="loading">
+          <span class="spinner"></span>번역 중...
+        </div>
+
+        <article class="entry" id="resultCard">
+          <div class="entry__head">
+            <div>
+              <div class="entry__title">
+                <h1 class="entry__word" id="resultEn"></h1>
+                <span class="pos" id="resultPos" style="display:none"></span>
+              </div>
+              <div class="entry__sub" id="resultMeta"></div>
+            </div>
+            <div class="entry__actions">
+              <button class="save-btn" id="addBtn" onclick="addToVocab()">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                단어장에 저장
+              </button>
+              <button class="save-btn save-btn--danger" id="detailDeleteBtn" style="display:none" onclick="deleteDetailWord()">삭제</button>
+            </div>
+          </div>
+          <div class="entry__divider"></div>
+          <div class="sense">
+            <span class="sense__num">1</span>
+            <div class="sense__ko" id="resultKo"></div>
+          </div>
+          <div class="example" id="exampleBox" style="display:none">
+            <div class="example__label">EXAMPLE</div>
+            <div class="example__en" id="exampleEn"></div>
+            <div class="example__ko" id="exampleKoLine"></div>
+          </div>
+        </article>
+
+        <div id="quizArea" style="display:none"></div>
+      </div>
+    </main>
   </div>
 
-  <!-- ══ 퀴즈 탭 ══ -->
-  <div class="panel" id="panel-quiz">
-    <div id="quizArea"></div>
+  <!-- ══ 라이브러리 뷰 (1d: 상단바 + 폴더 탭 + 단어 카드 그리드) ══ -->
+  <div class="app-lib" id="libraryView" style="display:none">
+    <header class="topbar">
+      <button class="brand" onclick="showHome()">
+        <span class="brand-mark">W</span>
+        <span class="nav__name">영어 단어장</span>
+      </button>
+      <label class="searchfield">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#71717a" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+        <input type="text" id="libSearch"
+               placeholder="이 폴더에서 검색 · Enter로 새 단어 번역"
+               oninput="renderLibrary()" onkeydown="handleLibKey(event)" autocomplete="off" />
+      </label>
+      <div class="topbar__right">
+        <span class="topbar__lang">EN → KO</span>
+        <div class="avatar" id="avatar">·</div>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="content__head">
+        <div>
+          <h1 id="libTitle">전체</h1>
+          <p id="libSub">0개 단어</p>
+        </div>
+        <div class="content__side">
+          <div class="lib-actions">
+            <button class="btn btn-outline btn-sm" onclick="exportCSV()">내보내기</button>
+            <button class="btn btn-outline btn-sm" onclick="importCSV()">가져오기</button>
+            <input type="file" id="importFile" accept=".csv" style="display:none" onchange="handleImport(event)" />
+          </div>
+          <div class="tabs" id="libTabs"></div>
+        </div>
+      </div>
+      <div class="grid" id="vocabList"></div>
+    </main>
   </div>
 
   <!-- 프리미엄 혜택 모달 -->
