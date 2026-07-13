@@ -125,6 +125,9 @@
             <div>
               <div class="entry__title">
                 <h1 class="entry__word" id="resultEn"></h1>
+                <button class="audio-btn" onclick="speakWord(entryWord)" aria-label="발음 듣기">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="#71717a"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="#71717a" stroke-width="2"/></svg>
+                </button>
                 <span class="pos" id="resultPos" style="display:none"></span>
               </div>
               <div class="entry__sub" id="resultMeta"></div>
@@ -138,15 +141,19 @@
             </div>
           </div>
           <div class="entry__divider"></div>
-          <div class="sense">
-            <span class="sense__num">1</span>
-            <div class="sense__ko" id="resultKo"></div>
+          <div class="senses">
+            <div class="sense">
+              <span class="sense__num">1</span>
+              <div class="sense__ko" id="resultKo"></div>
+            </div>
+            <div id="extraSenses" class="senses"></div>
           </div>
           <div class="example" id="exampleBox" style="display:none">
             <div class="example__label">EXAMPLE</div>
             <div class="example__en" id="exampleEn"></div>
             <div class="example__ko" id="exampleKoLine"></div>
           </div>
+          <div class="related" id="relatedTags" style="display:none"></div>
         </article>
 
         <div id="quizArea" style="display:none"></div>

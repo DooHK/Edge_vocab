@@ -375,7 +375,7 @@ const SAVE_ICON = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" s
    - 로컬 캐시(localStorage)
 ════════════════════════════════════════ */
 let entryWord = ''; // 현재 상세 뷰에 표시 중인 단어 (비동기 갱신 가드)
-const DICT_KEY = 'vocab_dict_v2';
+const DICT_KEY = 'vocab_dict_v3';
 
 function getDictCache() { return JSON.parse(localStorage.getItem(DICT_KEY) || '{}'); }
 
@@ -409,6 +409,8 @@ async function fetchDictInfo(word) {
   if (cached) return cached;
 
   let phonetic = '', pos = '', exampleEn = '';
+  const defs = [];                  // 추가 뜻 (영어 정의) [{pos, text}]
+  const syns = new Set(), ants = new Set(); // 유의어 / 반의어
 
   // 사전 API와 Tatoeba를 동시에 출발시켜 순차 대기 제거
   const tatoebaPromise = fetchExampleFromTatoeba(key);
@@ -423,20 +425,29 @@ async function fetchDictInfo(word) {
           || (entry.phonetics || []).map(p => p.text).find(Boolean) || '';
         for (const m of (entry.meanings || [])) {
           if (!pos) pos = m.partOfSpeech || '';
-          if (!exampleEn) {
-            const d = (m.definitions || []).find(d => d.example);
-            if (d) exampleEn = d.example;
+          (m.synonyms || []).forEach(s => syns.add(s));
+          (m.antonyms || []).forEach(a => ants.add(a));
+          let pushed = false;
+          for (const d of (m.definitions || [])) {
+            if (!pushed && d.definition && defs.length < 3) { defs.push({ pos: m.partOfSpeech || '', text: d.definition }); pushed = true; }
+            if (!exampleEn && d.example) exampleEn = d.example;
+            (d.synonyms || []).forEach(s => syns.add(s));
+            (d.antonyms || []).forEach(a => ants.add(a));
           }
-          if (pos && exampleEn) break;
         }
       }
     }
   } catch {}
 
   if (!exampleEn) exampleEn = await tatoebaPromise;
-  if (!phonetic && !pos && !exampleEn) return null; // 아무것도 못 찾으면 캐시하지 않음
+  if (!phonetic && !pos && !exampleEn && !defs.length) return null; // 아무것도 못 찾으면 캐시하지 않음
 
-  const info = { phonetic, pos, exampleEn, exampleKo: '' };
+  const info = {
+    phonetic, pos, exampleEn, exampleKo: '',
+    defs,
+    synonyms: [...syns].slice(0, 4),
+    antonyms: [...ants].slice(0, 2)
+  };
   saveDictEntry(key, info);
   return info;
 }
@@ -493,15 +504,60 @@ function showExample(word, dict) {
   });
 }
 
+/* 발음 듣기 (Web Speech API) */
+function speakWord(word) {
+  if (!('speechSynthesis' in window) || !word) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(word);
+  u.lang = 'en-US';
+  speechSynthesis.speak(u);
+}
+
+/* 추가 뜻 (영어 정의, 2번부터) */
+function renderExtraSenses(dict) {
+  const box = document.getElementById('extraSenses');
+  const defs = (dict && dict.defs) || [];
+  box.style.display = defs.length ? 'flex' : 'none';
+  box.innerHTML = defs.map((d, i) => `
+    <div class="sense">
+      <span class="sense__num">${i + 2}</span>
+      <div class="sense__def">${escHtml(d.text)}${d.pos ? ` <span class="sense__def-pos">· ${escHtml(d.pos)}</span>` : ''}</div>
+    </div>`).join('');
+}
+
+/* 유의어 · 반의어 태그 */
+function renderRelated(dict) {
+  const box = document.getElementById('relatedTags');
+  const syns = (dict && dict.synonyms) || [];
+  const ants = (dict && dict.antonyms) || [];
+  if (!syns.length && !ants.length) { box.innerHTML = ''; box.style.display = 'none'; return; }
+  const tag = (label, w) =>
+    `<button class="tag" onclick="searchRelated('${escAttr(w)}')">${label ? label + ' · ' : ''}${escHtml(w)}</button>`;
+  box.innerHTML =
+    syns.map((s, i) => tag(i === 0 ? '유의어' : '', s)).join('') +
+    ants.map((a, i) => tag(i === 0 ? '반의어' : '', a)).join('');
+  box.style.display = 'flex';
+}
+
+function searchRelated(w) {
+  goSearch();
+  document.getElementById('wordInput').value = w;
+  doTranslate();
+}
+
 function updateEntryExtras(word) {
   setEntrySub({});
   setEntryPos('');
   hideExample();
+  renderExtraSenses(null);
+  renderRelated(null);
   fetchDictInfo(word).then(dict => {
     if (!dict || entryWord !== word) return;
     setEntrySub({ phonetic: dict.phonetic });
     setEntryPos(dict.pos);
     showExample(word, dict);
+    renderExtraSenses(dict);
+    renderRelated(dict);
   });
 }
 
@@ -808,11 +864,15 @@ function showWordDetail(idx) {
   setEntrySub({ tail });
   setEntryPos('');
   hideExample();
+  renderExtraSenses(null);
+  renderRelated(null);
   fetchDictInfo(v.word).then(dict => {
     if (!dict || entryWord !== v.word) return;
     setEntrySub({ phonetic: dict.phonetic, tail });
     setEntryPos(dict.pos);
     showExample(v.word, dict);
+    renderExtraSenses(dict);
+    renderRelated(dict);
   });
   document.getElementById('addBtn').style.display = 'none';
   document.getElementById('detailDeleteBtn').style.display = 'flex';

@@ -426,10 +426,44 @@ input { font-family: inherit; }
 .save-btn.added:hover { opacity: 1; }
 .save-btn--danger { background: var(--red-soft); color: var(--red); }
 
+.audio-btn {
+  background: var(--fill);
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.audio-btn:hover { background: var(--line-2); }
+
 .entry__divider { height: 1px; background: var(--line); margin: 28px 0; }
+.senses { display: flex; flex-direction: column; gap: 18px; }
 .sense { display: flex; gap: 16px; }
-.sense__num { font-size: 15px; font-weight: 700; color: #d4d4d8; }
+.sense__num { font-size: 15px; font-weight: 700; color: #d4d4d8; min-width: 14px; }
 .sense__ko { font-size: 19px; font-weight: 600; line-height: 1.6; word-break: break-word; }
+.sense__def { font-size: 15px; color: var(--ink-2); line-height: 1.6; word-break: break-word; align-self: center; }
+.sense__def-pos { font-size: 12px; color: var(--faint); white-space: nowrap; }
+
+/* 유의어 · 반의어 (1c 디자인) */
+.related { margin-top: 28px; display: flex; gap: 8px; flex-wrap: wrap; }
+.tag {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: var(--fill);
+  border: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.tag:hover { background: var(--line-2); }
 
 /* 예문 박스 (1a 디자인) */
 .example {
