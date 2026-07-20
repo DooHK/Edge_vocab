@@ -131,7 +131,18 @@ async function handleGoogleSignIn(response) {
 
 function continueOffline() {
   document.getElementById('loginOverlay').classList.remove('show');
+  setOfflineStatus();
   updateBadge();
+}
+
+// 비로그인(오프라인)에서는 실제 사용 엔진(MyMemory)과 무료 플랜을 표시
+function setOfflineStatus() {
+  const planLabel = document.getElementById('currentPlan');
+  const modelLabel = document.getElementById('currentModel');
+  const banner = document.getElementById('upgradeBanner');
+  if (planLabel) planLabel.textContent = '무료';
+  if (modelLabel) modelLabel.textContent = 'MyMemory';
+  if (banner) banner.style.display = 'flex';
 }
 
 function logout() {
