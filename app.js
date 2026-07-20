@@ -1298,8 +1298,8 @@ async function showUpgradePrompt() {
     }
   } catch {}
 
-  const plan = confirm('프리미엄 업그레이드\n\n월간: ₩2,900\n연간: ₩19,900 (할인)\n\n연간 플랜으로 결제하시겠습니까?\n(확인=연간, 취소=월간)')
-    ? 'ANNUAL' : 'MONTHLY';
+  const plan = confirm('프리미엄 업그레이드\n\n평생 이용권: ₩6,900 (단 한 번 결제)\n연간 이용권: ₩4,900\n\n확인 = 평생 이용권 / 취소 = 연간 이용권')
+    ? 'LIFETIME' : 'ANNUAL';
 
   try {
     const res = await apiRequest('POST', '/api/payment/request', { plan });
@@ -1353,6 +1353,10 @@ async function handlePaymentCallback() {
   } else if (params.get('payment') === 'fail') {
     showToast('결제가 취소되었습니다.');
     window.history.replaceState({}, '', window.location.pathname);
+  } else if (params.get('upgrade') === '1') {
+    // 확장에서 "업그레이드" 클릭 시 웹앱 결제로 유도되는 진입점
+    window.history.replaceState({}, '', window.location.pathname);
+    showPremiumBenefits();
   }
 }
 
