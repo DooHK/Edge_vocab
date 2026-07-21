@@ -133,13 +133,17 @@
               <div class="entry__sub" id="resultMeta"></div>
             </div>
             <div class="entry__actions">
-              <label class="move-select" id="moveWrap" style="display:none">
-                <select id="moveSelect" onchange="moveDetailWord(this.value)" aria-label="폴더 이동"></select>
-              </label>
-              <button class="save-btn" id="addBtn" onclick="addToVocab()">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                단어장에 저장
-              </button>
+              <div class="save-wrap">
+                <button class="save-btn" id="addBtn" onclick="addToVocab()">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  단어장에 저장
+                </button>
+                <div class="saved-row" id="savedRow" style="display:none">
+                  <span class="saved-label"><b id="savedFolderName"></b>에 저장됨</span>
+                  <button class="change-folder-btn" id="changeFolderBtn" onclick="toggleFolderPicker()">저장 위치 변경</button>
+                </div>
+                <div class="folder-picker" id="folderPicker" style="display:none"></div>
+              </div>
               <button class="save-btn save-btn--danger" id="detailDeleteBtn" style="display:none" onclick="deleteDetailWord()">삭제</button>
             </div>
           </div>

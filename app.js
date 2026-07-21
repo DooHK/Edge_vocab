@@ -316,9 +316,8 @@ async function doTranslate() {
   activePane = 'search';
   document.getElementById('quizArea').style.display = 'none';
   document.getElementById('searchHome').style.display = 'none';
-  document.getElementById('addBtn').style.display = 'flex';
   document.getElementById('detailDeleteBtn').style.display = 'none';
-  document.getElementById('moveWrap').style.display = 'none';
+  showUnsavedState();
   renderNav();
   loading.classList.add('show');
   card.classList.remove('show');
@@ -357,16 +356,20 @@ async function doTranslate() {
     document.getElementById('resultEn').textContent = raw;
     document.getElementById('resultKo').textContent = translated;
 
-    const exists = getVocab().some(v => v.word.toLowerCase() === raw.toLowerCase());
-    const addBtn = document.getElementById('addBtn');
-    addBtn.innerHTML = exists ? '이미 저장됨' : SAVE_ICON + '단어장에 저장';
-    addBtn.className = 'save-btn' + (exists ? ' added' : '');
-    alreadyAdded = exists;
+    const existing = getVocab().find(v => v.word.toLowerCase() === raw.toLowerCase());
+    if (existing) {
+      alreadyAdded = true;
+      detailIdx = getVocab().indexOf(existing);
+      showSavedState(existing.folderId ?? null);
+    } else {
+      alreadyAdded = false;
+      showUnsavedState();
+    }
 
     card.classList.add('show');
 
     // 자동 추가
-    if (!exists && localStorage.getItem('vocab_auto_add') === 'true') {
+    if (!existing && localStorage.getItem('vocab_auto_add') === 'true') {
       await addToVocab();
     }
   } catch {
@@ -573,25 +576,48 @@ function updateEntryExtras(word) {
   });
 }
 
+/* ── 저장 위치(폴더) 선택 — 유튜브 뮤직 라이브러리 방식 ── */
+const SAVE_FOLDER_KEY = 'vocab_save_folder';
+let pickerForMove = false; // true면 이미 저장된 단어의 폴더 이동
+
+function getSaveFolderId() {
+  const raw = localStorage.getItem(SAVE_FOLDER_KEY);
+  if (raw === null) return undefined;  // 한 번도 저장 안 함
+  if (raw === 'all') return null;      // 전체(폴더 없음)
+  return parseInt(raw);
+}
+function setSaveFolderId(id) {
+  localStorage.setItem(SAVE_FOLDER_KEY, id == null ? 'all' : String(id));
+}
+function saveFolderLabel(id) {
+  if (id == null) return '전체';
+  const f = folders.find(f => f.id === id);
+  return f ? f.name : '전체';
+}
+
 async function addToVocab() {
   if (alreadyAdded || !curWord) return;
-  const vocab = getVocab();
-  if (vocab.some(v => v.word.toLowerCase() === curWord.toLowerCase())) {
+  if (getVocab().some(v => v.word.toLowerCase() === curWord.toLowerCase())) {
     showToast('이미 단어장에 있습니다.');
     return;
   }
+  // 첫 저장이고 폴더가 있으면 저장 위치를 먼저 고르게 한다
+  if (getToken() && folders.length && getSaveFolderId() === undefined) {
+    openFolderPicker(false);
+    return;
+  }
+  await saveWordToFolder(getSaveFolderId() ?? null);
+}
 
+async function saveWordToFolder(folderId) {
   const newItem = { word: curWord, translation: curTrans, date: today() };
 
   if (getToken()) {
+    if (folderId != null) newItem.folderId = folderId;
     try {
-      // 일별 자동 폴더
-      const dateFolder = await getOrCreateDateFolder(today());
-      if (dateFolder) newItem.folderId = dateFolder.id;
-
       const res = await apiRequest('POST', '/api/vocab', {
         word: newItem.word, translation: newItem.translation,
-        date: newItem.date, folderId: newItem.folderId
+        date: newItem.date, folderId: folderId
       });
       if (!res.ok) throw new Error();
       const saved = await res.json();
@@ -600,19 +626,103 @@ async function addToVocab() {
     } catch {
       showToast('서버 저장 실패. 로컬에만 저장됩니다.');
     }
-  } else {
-    newItem.folderName = today();
   }
 
+  const vocab = getVocab();
   vocab.unshift(newItem);
   saveVocab(vocab);
-  updateBadge();
-
-  const addBtn = document.getElementById('addBtn');
-  addBtn.innerHTML = '저장됨';
-  addBtn.className = 'save-btn added';
+  setSaveFolderId(folderId);
   alreadyAdded = true;
-  showToast(`"${curWord}" 단어장에 저장!`);
+  detailIdx = 0;
+  updateBadge();
+  showSavedState(folderId);
+  showToast(`"${curWord}" 저장됨`);
+}
+
+// 저장 완료 상태 표시 ("○○에 저장됨 · 저장 위치 변경")
+function showSavedState(folderId) {
+  document.getElementById('addBtn').style.display = 'none';
+  document.getElementById('savedFolderName').textContent = saveFolderLabel(folderId);
+  document.getElementById('savedRow').style.display = 'flex';
+  document.getElementById('changeFolderBtn').style.display = getToken() ? '' : 'none';
+}
+
+// 저장 전(검색 결과) 상태로 되돌림
+function showUnsavedState() {
+  const addBtn = document.getElementById('addBtn');
+  addBtn.style.display = 'flex';
+  addBtn.innerHTML = SAVE_ICON + '단어장에 저장';
+  addBtn.className = 'save-btn';
+  document.getElementById('savedRow').style.display = 'none';
+  document.getElementById('folderPicker').style.display = 'none';
+}
+
+/* ── 폴더 선택 피커 (선택 + 새 폴더 생성) ── */
+function openFolderPicker(forMove) {
+  pickerForMove = forMove;
+  const current = forMove
+    ? (getVocab()[detailIdx]?.folderId ?? null)
+    : (getSaveFolderId() ?? null);
+
+  let html = folderPickerRow(null, '전체', current);
+  folders.forEach(f => { html += folderPickerRow(f.id, f.name, current); });
+  html += `
+    <div class="picker-new">
+      <input id="pickerNewInput" type="text" placeholder="+ 새 폴더 만들기" autocomplete="off"
+             onkeydown="if(event.key==='Enter')createFolderFromPicker()" />
+      <button onclick="createFolderFromPicker()">추가</button>
+    </div>`;
+
+  const picker = document.getElementById('folderPicker');
+  picker.innerHTML = html;
+  picker.style.display = 'block';
+}
+
+function folderPickerRow(id, name, current) {
+  const active = id === current;
+  return `<button class="picker-item${active ? ' active' : ''}" onclick="pickFolder(${id === null ? 'null' : id})">
+    <span class="picker-check">${active ? '✓' : ''}</span><span class="picker-name">${escHtml(name)}</span></button>`;
+}
+
+async function pickFolder(folderId) {
+  document.getElementById('folderPicker').style.display = 'none';
+  if (pickerForMove) {
+    const v = getVocab()[detailIdx];
+    if (v && v.id) await moveWordToFolder(v.id, folderId);
+    else if (v) {
+      v.folderId = folderId || undefined;
+      v.folderName = folderId ? saveFolderLabel(folderId) : undefined;
+      saveVocab(getVocab());
+    }
+    setSaveFolderId(folderId);
+    const idx = getVocab().findIndex(x => (v?.id && x.id === v.id) || (x.word === v?.word && x.date === v?.date));
+    if (idx >= 0) detailIdx = idx;
+    showSavedState(folderId);
+  } else {
+    setSaveFolderId(folderId);
+    await saveWordToFolder(folderId);
+  }
+}
+
+function toggleFolderPicker() {
+  const picker = document.getElementById('folderPicker');
+  if (picker.style.display === 'block') { picker.style.display = 'none'; return; }
+  openFolderPicker(true);
+}
+
+async function createFolderFromPicker() {
+  const input = document.getElementById('pickerNewInput');
+  const name = (input.value || '').trim();
+  if (!name) return;
+  if (!getToken()) { showToast('로그인이 필요합니다.'); return; }
+  try {
+    const res = await apiRequest('POST', '/api/folders', { name });
+    if (!res.ok) { const e = await res.json().catch(() => ({})); showToast(e.error || '폴더 생성 실패'); return; }
+    const folder = await res.json();
+    await loadFolders();
+    showToast(`"${name}" 폴더 생성`);
+    pickFolder(folder.id);
+  } catch { showToast('폴더 생성 실패'); }
 }
 
 /* ════════════════════════════════════════
@@ -635,7 +745,6 @@ const DOT_COLORS = ['#6d5bd6', '#16a34a', '#f59e0b', '#0ea5e9', '#ef4444', '#14b
 
 function folderNameOf(id) {
   if (id === null) return '전체';
-  if (id === 0)    return '미분류';
   if (id === -1)   return '틀린 단어';
   const f = folders.find(f => f.id === id);
   return f ? f.name : '전체';
@@ -646,7 +755,6 @@ function renderNav() {
   if (!container) return;
   const vocab = getVocab();
   const wrongWords = getLocalWrongWords();
-  const uncatCount = vocab.filter(v => !v.folderId).length;
   const wrongCount = vocab.filter(v => wrongWords.has(v.word.toLowerCase())).length;
   const isLib = activePane === 'library';
 
@@ -661,7 +769,6 @@ function renderNav() {
   };
 
   let html = row(null, '전체', '#18181b', vocab.length);
-  html += row(0, '미분류', '#a1a1aa', uncatCount);
   html += row(-1, '틀린 단어', '#ef4444', wrongCount);
   folders.forEach((f, i) => {
     html += row(f.id, f.name, DOT_COLORS[i % DOT_COLORS.length], f.wordCount);
@@ -677,7 +784,7 @@ function renderLibTabs() {
   if (!container) return;
   const tab = (id, name) =>
     `<button class="tab${selectedFolderId === id ? ' tab--active' : ''}" onclick="showLibrary(${id})">${escHtml(name)}</button>`;
-  let html = tab(null, '전체') + tab(0, '미분류') + tab(-1, '틀린 단어');
+  let html = tab(null, '전체') + tab(-1, '틀린 단어');
   folders.forEach(f => { html += tab(f.id, f.name); });
   html += `<button class="tab tab--add" onclick="showCreateFolder()">+ 새 폴더</button>`;
   container.innerHTML = html;
@@ -703,7 +810,7 @@ async function showCreateFolder() {
 }
 
 async function deleteFolder(folderId) {
-  if (!confirm('이 폴더를 삭제할까요? (단어는 미분류로 이동)')) return;
+  if (!confirm('이 폴더를 삭제할까요? (단어는 전체에 남습니다)')) return;
   try {
     await apiRequest('DELETE', `/api/folders/${folderId}`);
     if (selectedFolderId === folderId) selectedFolderId = null;
@@ -728,22 +835,6 @@ async function moveWordToFolder(vocabId, folderId) {
   }
 }
 
-async function getOrCreateDateFolder(dateStr) {
-  if (!getToken()) return null;
-
-  const existing = folders.find(f => f.name === dateStr);
-  if (existing) return existing;
-
-  try {
-    const res = await apiRequest('POST', '/api/folders', { name: dateStr });
-    if (res.ok) {
-      const folder = await res.json();
-      folders.push(folder);
-      return folder;
-    }
-  } catch {}
-  return null;
-}
 
 /* ════════════════════════════════════════
    Vocabulary CRUD
@@ -796,10 +887,7 @@ function renderLibrary() {
 
   let filtered = allVocab;
 
-  if (selectedFolderId === 0) {
-    // 미분류
-    filtered = allVocab.filter(v => !v.folderId);
-  } else if (selectedFolderId === -1) {
+  if (selectedFolderId === -1) {
     // 틀린 단어 (로컬 퀴즈 결과 기반)
     const wrongWords = getLocalWrongWords();
     filtered = allVocab.filter(v =>
@@ -867,28 +955,6 @@ function deleteCurrentFolder() {
   }
 }
 
-function populateMoveSelect(v) {
-  const wrap = document.getElementById('moveWrap');
-  if (!getToken() || !v.id) { wrap.style.display = 'none'; return; }
-  const sel = document.getElementById('moveSelect');
-  let html = `<option value="0"${!v.folderId ? ' selected' : ''}>미분류</option>`;
-  folders.forEach(f => {
-    html += `<option value="${f.id}"${v.folderId === f.id ? ' selected' : ''}>${escHtml(f.name)}</option>`;
-  });
-  sel.innerHTML = html;
-  wrap.style.display = 'flex';
-}
-
-async function moveDetailWord(val) {
-  if (detailIdx === null) return;
-  const v = getVocab()[detailIdx];
-  if (!v || !v.id) return;
-  const folderId = parseInt(val) || null;
-  await moveWordToFolder(v.id, folderId);
-  const idx = getVocab().findIndex(x => x.id === v.id);
-  if (idx >= 0) showWordDetail(idx);
-}
-
 /* ── 저장된 단어 상세 (1c entry 재사용) ── */
 let detailIdx = null;
 
@@ -903,11 +969,12 @@ function showWordDetail(idx) {
   document.getElementById('searchHome').style.display = 'none';
 
   entryWord = v.word;
+  curWord = v.word;
+  curTrans = v.translation;
+  alreadyAdded = true;
   document.getElementById('resultEn').textContent = v.word;
   document.getElementById('resultKo').textContent = v.translation;
-  const tail =
-    (v.folderName ? `<span class="badge">${escHtml(v.folderName)}</span>` : '') +
-    `<span class="sub-date">${v.date} 저장</span>`;
+  const tail = `<span class="sub-date">${v.date} 저장</span>`;
   setEntrySub({ tail });
   setEntryPos('');
   hideExample();
@@ -921,9 +988,8 @@ function showWordDetail(idx) {
     renderExtraSenses(dict);
     renderRelated(dict);
   });
-  document.getElementById('addBtn').style.display = 'none';
+  showSavedState(v.folderId ?? null);
   document.getElementById('detailDeleteBtn').style.display = 'flex';
-  populateMoveSelect(v);
   document.getElementById('resultCard').classList.add('show');
   renderNav();
 }
@@ -934,8 +1000,8 @@ async function deleteDetailWord() {
   detailIdx = null;
   await deleteWord(idx);
   document.getElementById('resultCard').classList.remove('show');
-  document.getElementById('addBtn').style.display = 'flex';
   document.getElementById('detailDeleteBtn').style.display = 'none';
+  showUnsavedState();
   updateHomePanels();
 }
 

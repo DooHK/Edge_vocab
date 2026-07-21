@@ -702,23 +702,94 @@ input { font-family: inherit; }
 .btn-danger { color: var(--red); border-color: #f2cdcd; }
 .btn-danger:hover { background: var(--red-soft); }
 
-/* 단어 폴더 이동 셀렉트 */
-.move-select { display: flex; align-items: center; }
-.move-select select {
+/* ── 저장 위치 선택 (유튜브 뮤직 스타일) ── */
+.save-wrap { position: relative; }
+.saved-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   height: 48px;
-  padding: 0 12px;
-  border: 1px solid var(--line-2);
-  border-radius: var(--radius);
+  padding: 0 4px;
+}
+.saved-label { font-size: 14px; color: var(--muted); white-space: nowrap; }
+.saved-label b { color: var(--ink); font-weight: 700; }
+.change-folder-btn {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.change-folder-btn:hover { background: var(--accent-soft); }
+
+.folder-picker {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 50;
+  width: 240px;
+  max-height: 320px;
+  overflow-y: auto;
   background: var(--surface);
-  color: var(--ink-2);
-  font-family: inherit;
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px -16px rgba(24,24,27,0.28);
+  padding: 6px;
+}
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 10px;
+  border: none;
+  background: none;
+  border-radius: 9px;
   font-size: 14px;
   font-weight: 600;
-  outline: none;
+  color: var(--ink-2);
+  text-align: left;
   cursor: pointer;
-  max-width: 160px;
 }
-.move-select select:focus { border-color: var(--faint); }
+.picker-item:hover { background: var(--fill); }
+.picker-item.active { color: var(--ink); }
+.picker-check { width: 16px; color: var(--accent); font-weight: 800; flex-shrink: 0; }
+.picker-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.picker-new {
+  display: flex;
+  gap: 6px;
+  padding: 8px 6px 4px;
+  margin-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.picker-new input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  background: var(--fill);
+  color: var(--ink);
+}
+.picker-new input:focus { border-color: var(--faint); background: var(--surface); }
+.picker-new button {
+  flex-shrink: 0;
+  padding: 0 12px;
+  border: none;
+  border-radius: 9px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
 
 /* ── Quiz ── */
 .quiz-card {
