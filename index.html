@@ -213,6 +213,22 @@
     </main>
   </div>
 
+  <!-- ══ 모바일 하단 탭바 (좁은 화면 전용) ══ -->
+  <nav class="mobile-tabbar" id="mobileTabbar">
+    <button data-mtab="translate" onclick="mobileGo('translate')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+      <span>번역</span>
+    </button>
+    <button data-mtab="vocab" onclick="mobileGo('vocab')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>단어장</span>
+    </button>
+    <button data-mtab="quiz" onclick="mobileGo('quiz')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/><circle cx="12" cy="12" r="10"/></svg>
+      <span>퀴즈</span>
+    </button>
+  </nav>
+
   <!-- 프리미엄 혜택 모달 -->
   <div class="modal-overlay" id="premiumModal" style="display:none" onclick="closePremiumModal(event)">
     <div class="modal-card">

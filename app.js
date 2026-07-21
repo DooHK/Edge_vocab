@@ -294,6 +294,21 @@ function handleLibKey(e) {
   doTranslate();
 }
 
+/* ── 모바일 하단 탭바 ── */
+function mobileGo(tab) {
+  if (tab === 'translate') goSearch();
+  else if (tab === 'vocab') showLibrary(selectedFolderId ?? null);
+  else if (tab === 'quiz') showQuiz();
+}
+
+function updateMobileTab() {
+  const map = { search: 'translate', quiz: 'quiz', library: 'vocab' };
+  const active = map[activePane] || 'translate';
+  document.querySelectorAll('.mobile-tabbar [data-mtab]').forEach(b =>
+    b.classList.toggle('active', b.dataset.mtab === active)
+  );
+}
+
 /* ════════════════════════════════════════
    Translation (Google Translate via backend)
 ════════════════════════════════════════ */
@@ -601,8 +616,8 @@ async function addToVocab() {
     showToast('이미 단어장에 있습니다.');
     return;
   }
-  // 첫 저장이고 폴더가 있으면 저장 위치를 먼저 고르게 한다
-  if (getToken() && folders.length && getSaveFolderId() === undefined) {
+  // 첫 저장은 무조건 저장 위치를 먼저 고르게 한다
+  if (getSaveFolderId() === undefined) {
     openFolderPicker(false);
     return;
   }
@@ -780,6 +795,8 @@ function renderNav() {
 
   const quizBtn = document.getElementById('quizNavBtn');
   if (quizBtn) quizBtn.classList.toggle('folder--active', activePane === 'quiz');
+
+  updateMobileTab();
 }
 
 function renderLibTabs() {
