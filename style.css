@@ -1162,7 +1162,42 @@ input { font-family: inherit; }
   .tabs::-webkit-scrollbar { display: none; }
   .tab { flex-shrink: 0; }
   .lib-actions { order: -1; }
-  .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  /* 단어장: 카드 그리드 → 리스트 */
+  .grid { display: flex; flex-direction: column; gap: 0; }
+  .wcard {
+    border: none;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    box-shadow: none;
+    padding: 14px 34px 14px 2px;
+  }
+  .wcard:hover { border-color: var(--line); box-shadow: none; }
+  .wcard__top { padding-right: 0; }
+  .wcard__word { font-size: 16px; }
+  .wcard__phonetic { display: none; }
+  .wcard__ko { font-size: 14px; margin-top: 4px; }
+  .wcard__ex { display: none; }
+  .wcard__date { margin-top: 5px; }
+  .wcard__del {
+    opacity: 1;
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+  }
+  /* "검색해서 단어 추가" 행 */
+  .wcard--add {
+    flex-direction: row;
+    justify-content: center;
+    gap: 6px;
+    min-height: 0;
+    padding: 16px 2px;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    color: var(--accent);
+  }
+  .wcard--add:hover { border-color: var(--line); }
+  .wcard--add svg { width: 16px; height: 16px; }
 
   /* 로그인 카드 여백 */
   .login-card { width: 100%; max-width: 340px; }
