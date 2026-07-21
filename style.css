@@ -545,7 +545,49 @@ input { font-family: inherit; }
   align-items: flex-end;
   gap: 10px;
 }
-.lib-actions { display: flex; gap: 6px; }
+.lib-actions { display: flex; gap: 6px; position: relative; }
+.settings-btn {
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.settings-btn:hover { background: var(--fill); }
+.lib-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 60;
+  min-width: 150px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px -16px rgba(24,24,27,0.28);
+  padding: 6px;
+}
+.lib-menu button {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-align: left;
+  cursor: pointer;
+}
+.lib-menu button:hover { background: var(--fill); }
+.lib-menu button.danger { color: var(--red); }
+.lib-menu button.danger:hover { background: var(--red-soft); }
 
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .tab {

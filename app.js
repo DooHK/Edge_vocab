@@ -745,6 +745,7 @@ const DOT_COLORS = ['#6d5bd6', '#16a34a', '#f59e0b', '#0ea5e9', '#ef4444', '#14b
 
 function folderNameOf(id) {
   if (id === null) return '전체';
+  if (id === 0)    return '미분류';
   if (id === -1)   return '틀린 단어';
   const f = folders.find(f => f.id === id);
   return f ? f.name : '전체';
@@ -755,6 +756,7 @@ function renderNav() {
   if (!container) return;
   const vocab = getVocab();
   const wrongWords = getLocalWrongWords();
+  const uncatCount = vocab.filter(v => !v.folderId).length;
   const wrongCount = vocab.filter(v => wrongWords.has(v.word.toLowerCase())).length;
   const isLib = activePane === 'library';
 
@@ -769,6 +771,7 @@ function renderNav() {
   };
 
   let html = row(null, '전체', '#18181b', vocab.length);
+  html += row(0, '미분류', '#a1a1aa', uncatCount);
   html += row(-1, '틀린 단어', '#ef4444', wrongCount);
   folders.forEach((f, i) => {
     html += row(f.id, f.name, DOT_COLORS[i % DOT_COLORS.length], f.wordCount);
@@ -784,7 +787,7 @@ function renderLibTabs() {
   if (!container) return;
   const tab = (id, name) =>
     `<button class="tab${selectedFolderId === id ? ' tab--active' : ''}" onclick="showLibrary(${id})">${escHtml(name)}</button>`;
-  let html = tab(null, '전체') + tab(-1, '틀린 단어');
+  let html = tab(null, '전체') + tab(0, '미분류') + tab(-1, '틀린 단어');
   folders.forEach(f => { html += tab(f.id, f.name); });
   html += `<button class="tab tab--add" onclick="showCreateFolder()">+ 새 폴더</button>`;
   container.innerHTML = html;
@@ -887,7 +890,10 @@ function renderLibrary() {
 
   let filtered = allVocab;
 
-  if (selectedFolderId === -1) {
+  if (selectedFolderId === 0) {
+    // 미분류 (폴더 없는 단어)
+    filtered = allVocab.filter(v => !v.folderId);
+  } else if (selectedFolderId === -1) {
     // 틀린 단어 (로컬 퀴즈 결과 기반)
     const wrongWords = getLocalWrongWords();
     filtered = allVocab.filter(v =>
@@ -910,7 +916,7 @@ function renderLibrary() {
   const folderDelBtn = document.getElementById('folderDeleteBtn');
   if (folderDelBtn) {
     folderDelBtn.style.display =
-      (typeof selectedFolderId === 'number' && selectedFolderId > 0) ? 'inline-block' : 'none';
+      (typeof selectedFolderId === 'number' && selectedFolderId > 0) ? '' : 'none';
   }
 
   if (!filtered.length) {
@@ -954,6 +960,26 @@ function deleteCurrentFolder() {
     deleteFolder(selectedFolderId);
   }
 }
+
+/* ── 라이브러리 설정 메뉴 (내보내기/가져오기/전체삭제) ── */
+function toggleLibMenu(e) {
+  if (e) e.stopPropagation();
+  const menu = document.getElementById('libMenu');
+  menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+function closeLibMenu() {
+  const menu = document.getElementById('libMenu');
+  if (menu) menu.style.display = 'none';
+}
+
+// 바깥 클릭 시 열린 팝업(폴더 피커 · 설정 메뉴) 닫기
+document.addEventListener('click', e => {
+  if (!e.target.closest('.save-wrap')) {
+    const picker = document.getElementById('folderPicker');
+    if (picker) picker.style.display = 'none';
+  }
+  if (!e.target.closest('.lib-actions')) closeLibMenu();
+});
 
 /* ── 저장된 단어 상세 (1c entry 재사용) ── */
 let detailIdx = null;
