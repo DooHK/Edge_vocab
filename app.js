@@ -45,6 +45,7 @@ function installApp() {
    Google Sign-In
 ════════════════════════════════════════ */
 window.addEventListener('load', () => {
+  restoreNavState();
   if (getToken()) {
     showAppWithUser();
   } else {
@@ -245,7 +246,9 @@ function showHome() {
   document.getElementById('libraryView').style.display = 'none';
   document.getElementById('homeView').style.display = 'flex';
   if (activePane === 'library') activePane = 'search';
-  document.getElementById('quizArea').style.display = activePane === 'quiz' ? 'block' : 'none';
+  const quiz = activePane === 'quiz';
+  document.getElementById('quizArea').style.display = quiz ? 'block' : 'none';
+  document.getElementById('translateCols').style.display = quiz ? 'none' : '';
   updateHomePanels();
   renderNav();
   if (activePane === 'search') document.getElementById('wordInput').focus();
@@ -257,9 +260,21 @@ function showQuiz() {
   activePane = 'quiz';
   document.getElementById('searchHome').style.display = 'none';
   document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('translateCols').style.display = 'none';
   document.getElementById('quizArea').style.display = 'block';
   renderNav();
   showQuizSetup();
+}
+
+/* ── 폴더 내비 접기/펼치기 ── */
+function toggleNav() {
+  const collapsed = document.getElementById('homeView').classList.toggle('nav-collapsed');
+  localStorage.setItem('vocab_nav_collapsed', collapsed ? '1' : '0');
+}
+function restoreNavState() {
+  if (localStorage.getItem('vocab_nav_collapsed') === '1') {
+    document.getElementById('homeView').classList.add('nav-collapsed');
+  }
 }
 
 function showLibrary(folderId) {
@@ -314,7 +329,9 @@ function updateMobileTab() {
 ════════════════════════════════════════ */
 let curWord = '', curTrans = '', alreadyAdded = false;
 
-function handleKey(e) { if (e.key === 'Enter') doTranslate(); }
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doTranslate(); }
+}
 
 async function doTranslate() {
   const raw = document.getElementById('wordInput').value.trim();
@@ -1044,6 +1061,7 @@ function showWordDetail(idx) {
   document.getElementById('libraryView').style.display = 'none';
   document.getElementById('homeView').style.display = 'flex';
   document.getElementById('quizArea').style.display = 'none';
+  document.getElementById('translateCols').style.display = '';
   document.getElementById('searchHome').style.display = 'none';
 
   entryWord = v.word;
