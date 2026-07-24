@@ -1135,13 +1135,37 @@ input { font-family: inherit; }
   .auto-add-row { margin-left: auto; }
   .main__content { padding: 20px 16px 84px; }
   .search-empty { padding: 60px 0; }
-  .entry__head { flex-direction: column; gap: 16px; }
-  .entry__word { font-size: 30px; }
-  .entry__actions { width: 100%; }
-  .save-wrap { flex: 1; }
-  .save-btn { width: 100%; justify-content: center; }
-  .folder-picker { width: 100%; }
+
+  /* 상세 카드: 컴팩트하게 */
+  .entry__head { flex-direction: column; gap: 12px; }
+  .entry__title { gap: 8px; }
+  .entry__word { font-size: 26px; }
+  .entry__sub { margin-top: 6px; font-size: 13px; }
+  .audio-btn { width: 30px; height: 30px; }
+  .entry__divider { margin: 16px 0; }
+  .senses { gap: 11px; }
+  .sense { gap: 12px; }
+  .sense__ko { font-size: 17px; line-height: 1.45; }
+  .sense__def { font-size: 14px; line-height: 1.45; }
+  .example { margin-top: 16px; padding: 12px 14px; }
+  .related { margin-top: 16px; }
   #quizArea { max-width: none; }
+
+  /* 저장/삭제 액션 줄: 한 줄 컴팩트 배치 */
+  .entry__actions { width: 100%; align-items: center; gap: 10px; }
+  #addBtn { width: 100%; justify-content: center; }
+  .save-wrap { flex: 1; min-width: 0; }
+  .saved-row { height: auto; padding: 0; gap: 8px; }
+  .saved-label { font-size: 13px; }
+  .change-folder-btn { padding: 4px 6px; font-size: 12px; }
+  .folder-picker { width: 240px; }
+  .save-btn--danger {
+    width: auto;
+    height: 38px;
+    padding: 0 16px;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
 
   /* 라이브러리(단어장) 뷰 */
   .topbar { height: 56px; padding: 0 16px; gap: 12px; }

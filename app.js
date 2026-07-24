@@ -569,20 +569,14 @@ function speakWord(word) {
   speechSynthesis.speak(u);
 }
 
-/* 추가 뜻 (한국어 여러 뜻, 2번부터) — 없으면 영어 정의로 폴백 */
+/* 추가 뜻 (한국어 여러 뜻, 2번부터) */
 function renderExtraSenses(dict) {
   const box = document.getElementById('extraSenses');
   const primary = (curTrans || '').trim();
-  const meanings = ((dict && dict.meanings) || [])
+  const list = ((dict && dict.meanings) || [])
     .filter(m => m.gloss !== primary)
-    .slice(0, 5);
-
-  let list;
-  if (meanings.length) {
-    list = meanings.map(m => ({ text: m.gloss, pos: m.pos }));
-  } else {
-    list = ((dict && dict.defs) || []).map(d => ({ text: d.text, pos: d.pos }));
-  }
+    .slice(0, 5)
+    .map(m => ({ text: m.gloss, pos: m.pos }));
 
   box.style.display = list.length ? 'flex' : 'none';
   box.innerHTML = list.map((d, i) => `
