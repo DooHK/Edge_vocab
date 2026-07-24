@@ -370,6 +370,7 @@ async function doTranslate() {
 
     document.getElementById('resultEn').textContent = raw;
     document.getElementById('resultKo').textContent = translated;
+    renderExtraSenses(entryDict); // 주 번역 확정 후 여러 뜻 중복 제거하여 재렌더
 
     const existing = getVocab().find(v => v.word.toLowerCase() === raw.toLowerCase());
     if (existing) {
@@ -405,7 +406,7 @@ const SAVE_ICON = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" s
    - 로컬 캐시(localStorage)
 ════════════════════════════════════════ */
 let entryWord = ''; // 현재 상세 뷰에 표시 중인 단어 (비동기 갱신 가드)
-const DICT_KEY = 'vocab_dict_v3';
+const DICT_KEY = 'vocab_dict_v4';
 
 function getDictCache() { return JSON.parse(localStorage.getItem(DICT_KEY) || '{}'); }
 
@@ -432,6 +433,29 @@ async function fetchExampleFromTatoeba(word) {
   } catch { return ''; }
 }
 
+// 구글 사전 데이터(비공식·무료)에서 품사별 여러 한국어 뜻을 가져온다
+async function fetchGoogleMeanings(word) {
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=bd&q=${encodeURIComponent(word)}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    const dict = data[1]; // 사전(dictionary) 블록
+    if (!Array.isArray(dict)) return [];
+    const out = [], seen = new Set();
+    for (const entry of dict) {
+      const pos = entry[0] || '';       // 품사 (noun, verb, ...)
+      const glosses = entry[1] || [];   // ["빛","불", ...]
+      for (const g of glosses) {
+        if (g && !seen.has(g)) { seen.add(g); out.push({ pos, gloss: g }); }
+        if (out.length >= 8) break;
+      }
+      if (out.length >= 8) break;
+    }
+    return out;
+  } catch { return []; }
+}
+
 async function fetchDictInfo(word) {
   if (!/^[a-zA-Z][a-zA-Z'-]*$/.test(word)) return null; // 단일 단어만 (문장 제외)
   const key = word.toLowerCase();
@@ -442,8 +466,9 @@ async function fetchDictInfo(word) {
   const defs = [];                  // 추가 뜻 (영어 정의) [{pos, text}]
   const syns = new Set(), ants = new Set(); // 유의어 / 반의어
 
-  // 사전 API와 Tatoeba를 동시에 출발시켜 순차 대기 제거
+  // 사전 API · Tatoeba · 구글 여러뜻을 동시에 출발시켜 순차 대기 제거
   const tatoebaPromise = fetchExampleFromTatoeba(key);
+  const meaningsPromise = fetchGoogleMeanings(key);
 
   try {
     const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(key)}`);
@@ -470,11 +495,12 @@ async function fetchDictInfo(word) {
   } catch {}
 
   if (!exampleEn) exampleEn = await tatoebaPromise;
-  if (!phonetic && !pos && !exampleEn && !defs.length) return null; // 아무것도 못 찾으면 캐시하지 않음
+  const meanings = await meaningsPromise;
+  if (!phonetic && !pos && !exampleEn && !defs.length && !meanings.length) return null; // 아무것도 못 찾으면 캐시하지 않음
 
   const info = {
     phonetic, pos, exampleEn, exampleKo: '',
-    defs,
+    defs, meanings,
     synonyms: [...syns].slice(0, 4),
     antonyms: [...ants].slice(0, 2)
   };
@@ -543,12 +569,23 @@ function speakWord(word) {
   speechSynthesis.speak(u);
 }
 
-/* 추가 뜻 (영어 정의, 2번부터) */
+/* 추가 뜻 (한국어 여러 뜻, 2번부터) — 없으면 영어 정의로 폴백 */
 function renderExtraSenses(dict) {
   const box = document.getElementById('extraSenses');
-  const defs = (dict && dict.defs) || [];
-  box.style.display = defs.length ? 'flex' : 'none';
-  box.innerHTML = defs.map((d, i) => `
+  const primary = (curTrans || '').trim();
+  const meanings = ((dict && dict.meanings) || [])
+    .filter(m => m.gloss !== primary)
+    .slice(0, 5);
+
+  let list;
+  if (meanings.length) {
+    list = meanings.map(m => ({ text: m.gloss, pos: m.pos }));
+  } else {
+    list = ((dict && dict.defs) || []).map(d => ({ text: d.text, pos: d.pos }));
+  }
+
+  box.style.display = list.length ? 'flex' : 'none';
+  box.innerHTML = list.map((d, i) => `
     <div class="sense">
       <span class="sense__num">${i + 2}</span>
       <div class="sense__def">${escHtml(d.text)}${d.pos ? ` <span class="sense__def-pos">· ${escHtml(d.pos)}</span>` : ''}</div>
@@ -575,7 +612,10 @@ function searchRelated(w) {
   doTranslate();
 }
 
+let entryDict = null; // 현재 표시 중인 단어의 사전 정보 (번역 확정 후 재렌더용)
+
 function updateEntryExtras(word) {
+  entryDict = null;
   setEntrySub({});
   setEntryPos('');
   hideExample();
@@ -583,6 +623,7 @@ function updateEntryExtras(word) {
   renderRelated(null);
   fetchDictInfo(word).then(dict => {
     if (!dict || entryWord !== word) return;
+    entryDict = dict;
     setEntrySub({ phonetic: dict.phonetic });
     setEntryPos(dict.pos);
     showExample(word, dict);
